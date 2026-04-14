@@ -78,6 +78,15 @@ class LuAnHongTao5:
         self._dealer_take_and_discard_bottom()
         self.current_leader = self.dealer
 
+    @staticmethod
+    def _safe_input(prompt: str, default: str) -> str:
+        """在非交互/管道EOF环境下提供兜底输入，避免程序直接崩溃。"""
+        try:
+            return input(prompt)
+        except EOFError:
+            print(f"\n[输入流结束，自动使用默认输入: {default}]")
+            return default
+
     # ---------- 牌堆与发牌 ----------
     def _build_deck(self) -> List[Card]:
         deck: List[Card] = []
@@ -175,7 +184,7 @@ class LuAnHongTao5:
         for _round in range(2):
             for pid in range(4):
                 if pid == 0:
-                    txt = input("亮主> ")
+                    txt = self._safe_input("亮主> ", "PASS")
                     act = self._parse_human_bid(txt, current)
                 else:
                     act = self._ai_bid(pid, current)
@@ -502,7 +511,7 @@ class LuAnHongTao5:
             while True:
                 print("你的手牌(33张):")
                 print(self.show_hand(0))
-                raw = input("请选择8张扣底（输入8个序号）> ").strip()
+                raw = self._safe_input("请选择8张扣底（输入8个序号）> ", "1 2 3 4 5 6 7 8").strip()
                 picked = self.choose_cards_by_index(0, raw)
                 if not picked or len(picked) != 8:
                     print("需要准确输入8张序号。")
@@ -536,7 +545,7 @@ class LuAnHongTao5:
                     print(self.show_hand(0))
                     if lead_pattern:
                         print(f"领出牌型: {lead_pattern.kind}, 域: {domain}")
-                    raw = input("出牌（序号，空格分隔）> ")
+                    raw = self._safe_input("出牌（序号，空格分隔）> ", "1")
                     chosen = self.choose_cards_by_index(pid, raw)
                     if chosen is None or chosen == []:
                         print("本局不允许PASS，必须出牌。")
